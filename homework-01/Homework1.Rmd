@@ -1,0 +1,194 @@
+---
+title: "EAS 635.001 Homework 1"
+date: "8/27/2024"
+author: 
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# OVERVIEW OF EXPECTATIONS AND GENERAL TIPS
+
+1.  All homework assignments should be submitted electronically via the course Canvas site (see the course syllabus for due dates).
+
+2.  .Rmd (R Markdown) templates will be available for you to fill out, but must be knit to PDF or HTML format for submission. You don't need to submit the .Rmd file.
+
+3.  You may discuss homework solutions and methods with others, but the actual work, code development, and details need to be your own.
+
+4.  Note that if you copy and paste code (with or without modification) from other Sources, state it, e.g., "This code is modified based on code from chatGPT"
+
+5.  Please find information about how to install R and Rstudio here: <https://r4ds.had.co.nz/introduction.html#prerequisites>
+
+6.  Try "Knit" the original file first. You may need to install/update extra packages as follows to "Knit" a pdf file. If you still run into errors, please delete "pdf_document: default" at the beginning of the template and just get a html output.
+
+```{r}
+# install.packages("xfun")
+# install.packages("tinytex")
+# tinytex::install_tinytex()
+```
+
+7.  Please rename your file to youruniqname_hw1, e.g. "likunxi_hw1" before submit
+
+8.  For all plots, please add a title and label the axes with the appropriate variable names. If you can find the units of the variables, it will be good to add units as well.
+
+# Homework 1
+
+Homework 1 is meant to introduce you to coding in R. Please read the following sections of the textbooks beforehand if you are new to R:
+
+-   Section 2.1 through 2.4 of Zelterman
+-   Section 3.1 through 3.5 of Zelterman
+-   Section 2.1 through 2.2.2, Section 2.4, and Section 2.7 of Everitt and Hothorn
+
+There are 6 questions and 10 points total. Please fill out the .Rmd template, your code and output should automatically appear after you knit to .pdf, .html, etc.
+
+## Question 1 (0.5 points)
+
+Use R to calculate the area of a circle that has a radius of 5. The area of a circle is calculated by the equation: $$A=\pi r^2$$
+
+Do so by first assigning 5 to the variable "radius", as for the value of $\pi$, just type `pi` in the code chunk.
+
+```{r}
+### CODE ANSWER TO QUESTION 1 HERE
+
+
+```
+
+## Question 2 (0.5 points)
+
+Create a vector of the numbers 3 through 15, slice the fourth to the ninth element in the vector, and then multiply by 3. Save the vector output in a second variable and use R to check if "27" is in this second vector. Remember to provide your code for each step.
+
+```{r}
+### CODE ANSWER TO QUESTION 2 HERE
+```
+
+## Question 3 (2 points)
+
+Part A) Use `rnorm()` to generate 10 random observations from a standard normal distribution, save the observations to a variable, and calculate the mean and standard deviation. (You are welcome to use built-in R functions)
+
+```{r}
+### CODE ANSWER TO QUESTION 3 PT A HERE
+```
+
+Part B) Now use `rnorm()` to generate 10000 random observations from a standard normal distribution, save the observations to a new variable, and calculate the mean and standard deviation. You may need to use `set.seed(10)` before generating the random observations to ensure reproducibility.
+
+```{r}
+### CODE ANSWER TO QUESTION 3 PT B HERE
+# set.seed(10)
+```
+
+Part C) Create two histograms, one for the data stored in each variable (10 observations and 10000 observations). Make sure that each plot has a title and that the axes are labelled appropriately. You may need to use `set.seed(10)` before generating the random observations to ensure reproducibility.
+
+```{r}
+### CODE TO PLOT HISTOGRAMS HERE
+```
+
+Part D) Which (10 observations or 10000 observations) had a mean closer to 0? (Remember to show what code you used to get the answer.)
+
+```{r}
+### CODE TO SUPPORT ANSWER FOR QUESTION 3 PART D HERE
+```
+
+TYPE ANSWER HERE:
+
+( ) had a mean closer to 0
+
+## QUESTION 4 (2 points)
+
+Part A) This question uses the built-in iris dataset. Filter the dataset for Petal.Length \> the mean of Petal.Length. Then, log-transform the column Sepal.Length and filter for the entries where transformed Sepal.Length is \<1.8.
+
+hints: There are multiple ways to do this, the simplest way is to filter(slice) the dataset step by step and assign the result of each step to a new variable, also you can use `dplyr` package to do this, there are a ton of amazing and powerful functions that are useful for arranging or manipulating your dataset. Feel free to use any method you are comfortable with.
+
+A tutorial on dplyr can be found [here](https://cengel.github.io/R-data-wrangling/dplyr.html)
+
+```{r}
+### CODE FOR QUESTION 4 PT A
+# library(dplyr)
+```
+
+Part B) How many rows are in the dataset after filtering? (Remember to show what code you used to get the answer.)
+
+```{r}
+### CODE TO SUPPORT ANSWER FOR QUESTION 4 PT B HERE
+```
+
+TYPE ANSWER HERE:
+
+Part C) What species are represented in the dataset after filtering? (Remember to show what code you used to get the answer.)
+
+```{r}
+### CODE TO SUPPORT ANSWER FOR QUESTION 4 PT C HERE
+```
+
+TYPE ANSWER HERE:
+
+Part D) Now using the filtered dataset, calculate the standard deviation value for each of the following columns: `Sepal.Length`, `Sepal.Width`, `Petal.Length`, `Petal.Width`. You could round up the results to 2 decimal places for convenience.
+
+```{r}
+### CODE FOR QUESTION 4 PT D
+```
+
+TYPE ANSWERS HERE:
+
+Standard Deviation of Sepal Length:
+
+Standard Deviation of Sepal Width:
+
+Standard Deviation of Petal Length:
+
+Standard Deviation of Petal Width:
+
+## QUESTION 5 (4 points)
+
+Part A) For this part you have a option to make a plot of the log-transformed `Sepal.Length` column in the filtered dataset you created in Question 4 You can either (1)Make a stem and leaf plot (2)Make a histogram. Remember to add titles and appropriate axes labels if you choose the latter option.
+
+```{r}
+### CODE STEM AND LEAF PLOT/ HISTOGRAM HERE
+```
+
+Part B) Make a scatter plot of \`Petal.Length\` (x-axis) and \`Petal.Width\` (y-axis) using the filtered dataset from Question 4. Remember to add titles and appropriate axes labels. (You could try to use \`ggplot2\` package for the scatter plot, but it is not required.
+
+A tutorial for ggplot2 can be found [here](%5Bhttps://r-graph-gallery.com/272-basic-scatterplot-with-ggplot2.html)
+
+```{r}
+### CODE SCATTERPLOT HERE
+```
+
+Part C) Make a boxplot of `Petal.Width` using the filtered dataset and a boxplot of `Petal.Width` using the original dataset. Use the `par` function to plot them side by side. Remember to add titles and appropriate axes labels.
+
+```{r}
+### CODE BOXPLOT HERE
+```
+
+When you try to plot multiple boxplots to the same figure, sometimes it will be more readable when you make the plot horizontal. What you need to do here is make a plot(including multiple boxplots) of `Petal.Width` grouped by `Species` using the original iris dataset, and make it horizontal.
+
+What we expect you to do when you try finding the solutions is ask your devoted R for help instead of Google or chatGPT, since there is always a detailed documentation for each function of the libraries you have imported. Try to type `?boxplot` in the `Console` in RStudio, press `Enter` and see what you can find. Remember to add titles and appropriate axes labels.
+
+```{r}
+### CODE BOXPLOT HERE
+```
+
+Part D) Make a matrix of scatterplots using `pairs()` using the filtered dataset. Include a line of best fit using the `abline` parameter. [Hint: if you get stuck, refer to Ch 2.4 in Everitt and Hothorn]
+
+```{r}
+### CODE SCATTERPLOTS HERE
+```
+
+## QUESTION 6 (1 point)
+
+For the data with more than one variable, is it possible to 'boxplot' them in a bivariate way? Yes, it is! One of the bivariate boxplots is called "bagplot". At the end of the assignment, we hope you could have fun finding some interesting stuff about this type of plot and check if it could be used in your future projects.
+
+Use `bagplot()` from the package `aplpack` to create a bagplot (bivariate boxplot) of `Sepal.Length` and `Sepal.Width` using the data in the original `iris` dataset. Be sure to label the axes with the appropriate variable name, and to install and load the necessary packages.
+
+```{r}
+### CODE BAGPLOT HERE
+# install.packages("aplpack")
+# library(aplpack)
+```
+
+Did you learn something new about the bagplot according to either Google or the documentation?
+
+ANSWER HERE:
