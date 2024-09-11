@@ -1,17 +1,22 @@
 ---
-title: "EAS 635.001 Homework 1"
-date: "8/27/2024"
-author: 
-output:
-  pdf_document: default
-  html_document: default
+title: 'EAS 635.001 Homework 1'
+embed-resources: true
+author: "Xiuyu Cao"
+date: "`r format(Sys.Date(), '%m/%d/%Y')`"
+format:
+  html:
+    code-folding: show
+    highlight: textmate
+    number-sections: true
+    theme: flatly
+    toc: TRUE
+    toc-depth: 4
+    toc-float:
+      collapsed: false
+      smooth-scroll: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-# OVERVIEW OF EXPECTATIONS AND GENERAL TIPS
+## OVERVIEW OF EXPECTATIONS AND GENERAL TIPS
 
 1.  All homework assignments should be submitted electronically via the course Canvas site (see the course syllabus for due dates).
 
@@ -53,8 +58,8 @@ Do so by first assigning 5 to the variable "radius", as for the value of $\pi$, 
 
 ```{r}
 ### CODE ANSWER TO QUESTION 1 HERE
-
-
+radius <- 5
+pi * radius^2
 ```
 
 ## Question 2 (0.5 points)
@@ -63,6 +68,9 @@ Create a vector of the numbers 3 through 15, slice the fourth to the ninth eleme
 
 ```{r}
 ### CODE ANSWER TO QUESTION 2 HERE
+vec1 <- 3:15
+vec2 <- vec1[4:9] * 3
+27 %in% vec2
 ```
 
 ## Question 3 (2 points)
@@ -71,96 +79,146 @@ Part A) Use `rnorm()` to generate 10 random observations from a standard normal 
 
 ```{r}
 ### CODE ANSWER TO QUESTION 3 PT A HERE
+set.seed(42194112)
+obs1 <- rnorm(10)
+mean(obs1)
+sd(obs1)
 ```
 
-Part B) Now use `rnorm()` to generate 10000 random observations from a standard normal distribution, save the observations to a new variable, and calculate the mean and standard deviation. You may need to use `set.seed(10)` before generating the random observations to ensure reproducibility.
+Part B) Now use `rnorm()` to generate 10,000 random observations from a standard normal distribution, save the observations to a new variable, and calculate the mean and standard deviation. You may need to use `set.seed(10)` before generating the random observations to ensure reproducibility.
 
 ```{r}
 ### CODE ANSWER TO QUESTION 3 PT B HERE
-# set.seed(10)
+set.seed(42194112)
+obs2 <- rnorm(10000)
+mean(obs2)
+sd(obs2)
 ```
 
 Part C) Create two histograms, one for the data stored in each variable (10 observations and 10000 observations). Make sure that each plot has a title and that the axes are labelled appropriately. You may need to use `set.seed(10)` before generating the random observations to ensure reproducibility.
 
 ```{r}
 ### CODE TO PLOT HISTOGRAMS HERE
+par(mfrow = c(1, 2))
+
+hist(obs1, main = "Histogram of 10 Observations", xlab = "Value")
+hist(obs2, main = "Histogram of 10000 Observations", xlab = "Value")
+
+par(mfrow = c(1, 1))
 ```
 
 Part D) Which (10 observations or 10000 observations) had a mean closer to 0? (Remember to show what code you used to get the answer.)
 
 ```{r}
 ### CODE TO SUPPORT ANSWER FOR QUESTION 3 PART D HERE
+obs1_to_0 <- abs(mean(obs1) - 0)  # 10 observations
+obs2_to_0 <- abs(mean(obs2) - 0)  # 10,000 observations
+
+obs1_to_0 < obs2_to_0
 ```
 
 TYPE ANSWER HERE:
 
-( ) had a mean closer to 0
+(10,000 observations) had a mean closer to 0
 
 ## QUESTION 4 (2 points)
 
-Part A) This question uses the built-in iris dataset. Filter the dataset for Petal.Length \> the mean of Petal.Length. Then, log-transform the column Sepal.Length and filter for the entries where transformed Sepal.Length is \<1.8.
+**Part A)** This question uses the built-in iris dataset. Filter the dataset for Petal.Length \> the mean of Petal.Length. Then, log-transform the column Sepal.Length and filter for the entries where transformed Sepal.Length is \<1.8.
 
 hints: There are multiple ways to do this, the simplest way is to filter(slice) the dataset step by step and assign the result of each step to a new variable, also you can use `dplyr` package to do this, there are a ton of amazing and powerful functions that are useful for arranging or manipulating your dataset. Feel free to use any method you are comfortable with.
 
 A tutorial on dplyr can be found [here](https://cengel.github.io/R-data-wrangling/dplyr.html)
 
-```{r}
+```{r message=F}
 ### CODE FOR QUESTION 4 PT A
-# library(dplyr)
+library(dplyr)
+
+iris.filtered <- iris %>%
+  filter(Petal.Length > mean(iris$Petal.Length)) %>%
+  mutate(Sepal.Length = log(Sepal.Length)) %>%
+  filter(Sepal.Length < 1.8)
 ```
 
-Part B) How many rows are in the dataset after filtering? (Remember to show what code you used to get the answer.)
+**Part B)** How many rows are in the dataset after filtering? (Remember to show what code you used to get the answer.)
 
 ```{r}
 ### CODE TO SUPPORT ANSWER FOR QUESTION 4 PT B HERE
+dim(iris.filtered)[1]
 ```
 
 TYPE ANSWER HERE:
 
-Part C) What species are represented in the dataset after filtering? (Remember to show what code you used to get the answer.)
+32 rows.
+
+**Part C)** What species are represented in the dataset after filtering? (Remember to show what code you used to get the answer.)
 
 ```{r}
 ### CODE TO SUPPORT ANSWER FOR QUESTION 4 PT C HERE
+unique(iris.filtered$Species)
 ```
 
 TYPE ANSWER HERE:
+
+Two species:
+
+* versicolor
+* virginica
 
 Part D) Now using the filtered dataset, calculate the standard deviation value for each of the following columns: `Sepal.Length`, `Sepal.Width`, `Petal.Length`, `Petal.Width`. You could round up the results to 2 decimal places for convenience.
 
 ```{r}
 ### CODE FOR QUESTION 4 PT D
+round(sd(iris.filtered$Sepal.Length), 2)  # sd for Sepal.Length
+round(sd(iris.filtered$Sepal.Width), 2)  # sd for Sepal.Width
+round(sd(iris.filtered$Petal.Length), 2)  # sd for Petal.Length
+round(sd(iris.filtered$Petal.Width), 2)  # sd for Petal.Width
 ```
 
 TYPE ANSWERS HERE:
 
-Standard Deviation of Sepal Length:
-
-Standard Deviation of Sepal Width:
-
-Standard Deviation of Petal Length:
-
-Standard Deviation of Petal Width:
+* Standard Deviation of Sepal Length: 0.04
+* Standard Deviation of Sepal Width: 0.28
+* Standard Deviation of Petal Length: 0.44
+* Standard Deviation of Petal Width: 0.33
 
 ## QUESTION 5 (4 points)
 
-Part A) For this part you have a option to make a plot of the log-transformed `Sepal.Length` column in the filtered dataset you created in Question 4 You can either (1)Make a stem and leaf plot (2)Make a histogram. Remember to add titles and appropriate axes labels if you choose the latter option.
+**Part A)** For this part you have a option to make a plot of the log-transformed `Sepal.Length` column in the filtered dataset you created in Question 4 You can either (1)Make a stem and leaf plot (2)Make a histogram. Remember to add titles and appropriate axes labels if you choose the latter option.
 
 ```{r}
 ### CODE STEM AND LEAF PLOT/ HISTOGRAM HERE
+# histogram
+hist(iris.filtered$Sepal.Length, 
+     main = "Histogram of Log-transformed Sepal.Length", 
+     xlab = "Log-transformed Sepal.Length (log(cm))",)
 ```
 
-Part B) Make a scatter plot of \`Petal.Length\` (x-axis) and \`Petal.Width\` (y-axis) using the filtered dataset from Question 4. Remember to add titles and appropriate axes labels. (You could try to use \`ggplot2\` package for the scatter plot, but it is not required.
+**Part B)** Make a scatter plot of \`Petal.Length\` (x-axis) and \`Petal.Width\` (y-axis) using the filtered dataset from Question 4. Remember to add titles and appropriate axes labels. (You could try to use \`ggplot2\` package for the scatter plot, but it is not required.
 
 A tutorial for ggplot2 can be found [here](%5Bhttps://r-graph-gallery.com/272-basic-scatterplot-with-ggplot2.html)
 
 ```{r}
 ### CODE SCATTERPLOT HERE
+plot(Petal.Width~Petal.Length, data = iris.filtered, 
+     xlab = "Petal.Length (cm)", ylab = "Petal.Width (cm)", 
+     main = "Scatter Plot of Petal.Length and Petal.Width")
 ```
 
-Part C) Make a boxplot of `Petal.Width` using the filtered dataset and a boxplot of `Petal.Width` using the original dataset. Use the `par` function to plot them side by side. Remember to add titles and appropriate axes labels.
+**Part C)** Make a boxplot of `Petal.Width` using the filtered dataset and a boxplot of `Petal.Width` using the original dataset. Use the `par` function to plot them side by side. Remember to add titles and appropriate axes labels.
 
 ```{r}
 ### CODE BOXPLOT HERE
+par(mfrow = c(1, 2))
+
+boxplot(Petal.Width ~ Species, data = iris.filtered, horizontal = TRUE,
+        main = "Petal.Width by Species (Filtered)", 
+        xlab = "Species", ylab = "Petal.Width (cm)")
+
+boxplot(Petal.Width ~ Species, data = iris, horizontal = TRUE,
+        main = "Petal.Width by Species (Original)", 
+        xlab = "Species", ylab = "Petal.Width (cm)")
+
+par(mfrow = c(1, 1))
 ```
 
 When you try to plot multiple boxplots to the same figure, sometimes it will be more readable when you make the plot horizontal. What you need to do here is make a plot(including multiple boxplots) of `Petal.Width` grouped by `Species` using the original iris dataset, and make it horizontal.
@@ -169,12 +227,21 @@ What we expect you to do when you try finding the solutions is ask your devoted 
 
 ```{r}
 ### CODE BOXPLOT HERE
+boxplot(Petal.Width ~ Species, data = iris, horizontal = TRUE, 
+        main = "Petal.Width by Species (Original)", 
+        xlab = "Petal.Width (cm)", ylab = "Species")
 ```
 
-Part D) Make a matrix of scatterplots using `pairs()` using the filtered dataset. Include a line of best fit using the `abline` parameter. [Hint: if you get stuck, refer to Ch 2.4 in Everitt and Hothorn]
+**Part D)** Make a matrix of scatterplots using `pairs()` using the filtered dataset. Include a line of best fit using the `abline` parameter. [Hint: if you get stuck, refer to Ch 2.4 in Everitt and Hothorn]
 
 ```{r}
 ### CODE SCATTERPLOTS HERE
+iris.filtered %>%
+  select(Sepal.Length:Petal.Width) %>%
+  pairs(panel = function (x, y, ...) {
+        points(x, y, ...)
+        abline(lm(y ~ x), col = "red")
+        }, pch = ".", cex = 4)
 ```
 
 ## QUESTION 6 (1 point)
@@ -185,10 +252,19 @@ Use `bagplot()` from the package `aplpack` to create a bagplot (bivariate boxplo
 
 ```{r}
 ### CODE BAGPLOT HERE
-# install.packages("aplpack")
-# library(aplpack)
+library(aplpack)
+
+bagplot(iris$Sepal.Length, iris$Sepal.Width, xlab = "Sepal.Length (cm)", ylab = "Sepal.Width (cm)")
 ```
 
 Did you learn something new about the bagplot according to either Google or the documentation?
 
-ANSWER HERE:
+ANSWER HERE: 
+
+The bagplot can be used to visualize the location, spread, skewness, and outliers of a data set.
+
+* The asterisk symbol near the center of the graph is the central point of the data for both Sepal.Length and Sepal.Width.
+* The inner polygon is the bag, which contains at most central 50% of the data.
+* The outer polygon is the loop, giving the overall spread of the data. Points outside the loop are considered outliers.
+
+
