@@ -75,34 +75,34 @@ vec2 <- vec1[4:9] * 3
 
 ## Question 3 (2 points)
 
-Part A) Use `rnorm()` to generate 10 random observations from a standard normal distribution, save the observations to a variable, and calculate the mean and standard deviation. (You are welcome to use built-in R functions)
+**Part A)** Use `rnorm()` to generate 10 random observations from a standard normal distribution, save the observations to a variable, and calculate the mean and standard deviation. (You are welcome to use built-in R functions)
 
 ```{r}
 ### CODE ANSWER TO QUESTION 3 PT A HERE
-set.seed(42194112)
+set.seed(10)
 obs1 <- rnorm(10)
 mean(obs1)
 sd(obs1)
 ```
 
-Part B) Now use `rnorm()` to generate 10,000 random observations from a standard normal distribution, save the observations to a new variable, and calculate the mean and standard deviation. You may need to use `set.seed(10)` before generating the random observations to ensure reproducibility.
+**Part B)** Now use `rnorm()` to generate 10,000 random observations from a standard normal distribution, save the observations to a new variable, and calculate the mean and standard deviation. You may need to use `set.seed(10)` before generating the random observations to ensure reproducibility.
 
 ```{r}
 ### CODE ANSWER TO QUESTION 3 PT B HERE
-set.seed(42194112)
+set.seed(10)
 obs2 <- rnorm(10000)
 mean(obs2)
 sd(obs2)
 ```
 
-Part C) Create two histograms, one for the data stored in each variable (10 observations and 10000 observations). Make sure that each plot has a title and that the axes are labelled appropriately. You may need to use `set.seed(10)` before generating the random observations to ensure reproducibility.
+**Part C)** Create two histograms, one for the data stored in each variable (10 observations and 10000 observations). Make sure that each plot has a title and that the axes are labelled appropriately. You may need to use `set.seed(10)` before generating the random observations to ensure reproducibility.
 
 ```{r}
 ### CODE TO PLOT HISTOGRAMS HERE
 par(mfrow = c(1, 2))
 
-hist(obs1, main = "Histogram of 10 Observations", xlab = "Value")
-hist(obs2, main = "Histogram of 10000 Observations", xlab = "Value")
+hist(obs1, main = "Distribution of 10 Observations", xlab = "Value")
+hist(obs2, main = "Distribution of 10000 Observations", xlab = "Value")
 
 par(mfrow = c(1, 1))
 ```
@@ -189,7 +189,7 @@ TYPE ANSWERS HERE:
 ### CODE STEM AND LEAF PLOT/ HISTOGRAM HERE
 # histogram
 hist(iris.filtered$Sepal.Length, 
-     main = "Histogram of Log-transformed Sepal.Length", 
+     main = "Distribution of Log-transformed Sepal.Length", 
      xlab = "Log-transformed Sepal.Length (log(cm))",)
 ```
 
@@ -212,11 +212,11 @@ par(mfrow = c(1, 2))
 
 boxplot(Petal.Width ~ Species, data = iris.filtered, horizontal = TRUE,
         main = "Petal.Width by Species (Filtered)", 
-        xlab = "Species", ylab = "Petal.Width (cm)")
+        ylab = "Species", xlab = "Petal.Width (cm)")
 
 boxplot(Petal.Width ~ Species, data = iris, horizontal = TRUE,
         main = "Petal.Width by Species (Original)", 
-        xlab = "Species", ylab = "Petal.Width (cm)")
+        ylab = "Species", xlab = "Petal.Width (cm)")
 
 par(mfrow = c(1, 1))
 ```
@@ -254,15 +254,16 @@ Use `bagplot()` from the package `aplpack` to create a bagplot (bivariate boxplo
 ### CODE BAGPLOT HERE
 library(aplpack)
 
-bagplot(iris$Sepal.Length, iris$Sepal.Width, xlab = "Sepal.Length (cm)", ylab = "Sepal.Width (cm)")
+bagplot(iris$Sepal.Length, iris$Sepal.Width, 
+        main = "Bagplot of Sepal.Length and Sepal.Width",
+        xlab = "Sepal.Length (cm)", ylab = "Sepal.Width (cm)")
 ```
 
 Did you learn something new about the bagplot according to either Google or the documentation?
 
 ANSWER HERE: 
 
-The bagplot can be used to visualize the location, spread, skewness, and outliers of a data set.
-
+* The bagplot can be used to visualize the location, spread, skewness, and outliers of a data set.
 * The asterisk symbol near the center of the graph is the central point of the data for both Sepal.Length and Sepal.Width.
 * The inner polygon is the bag, which contains at most central 50% of the data.
 * The outer polygon is the loop, giving the overall spread of the data. Points outside the loop are considered outliers.
