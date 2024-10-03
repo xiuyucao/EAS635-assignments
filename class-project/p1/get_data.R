@@ -1,4 +1,4 @@
-## query and clean the FIA data
+## query, preprocess, and visualize the FIA data
 ## FIADB version: 2024-04-15
 ## Created by Xiuyu Cao on Oct 2, 2024
 library(tidyverse)
