@@ -31,7 +31,8 @@ trees.clean <- readRDS('data/proj/raw_trees.rds') %>%
   right_join(plots, by = 'PLT_CN') %>%
   filter(!is.na(DSTRBCD1)) %>%
   select(-LAT.y, -LON.y) %>%
-  rename(LAT = LAT.x, LON = LON.x)
+  rename(LAT = LAT.x, LON = LON.x) %>%
+  mutate(DSTRBCD1 = as.numeric(substr(DSTRBCD1, 1, 1)))  # keep only the tenth digit of DSTRBCD1
 
 # write data
 saveRDS(plots, 'data/proj/input_plots.rds')
