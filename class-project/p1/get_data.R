@@ -89,12 +89,21 @@ fig_2c <- ggplot(biomass, aes(x = GENUS, y = bio_total)) +
 
 
 ## ----------------------------- figure 2
-fig_2bc <- ggarrange(fig_2b, fig_2c, ncol = 1, nrow = 2, heights = c(1, 1),
+fig_2bc <- ggarrange(fig_2b, fig_2c, ncol = 1, nrow = 2, heights = c(0.7, 1),
                      labels = c("b", "c"))
 
-fig2 <- ggarrange(fig_2a, fig_2bc, ncol = 2, widths = c(1, 1.5),
+fig2 <- ggarrange(fig_2a, fig_2bc, ncol = 2, widths = c(1.2, 1),
                   labels = c("a", ""))
 
-ggsave('class-project/figs/p1_fig2.png', fig2, width = 12, height = 7)
+ggsave('class-project/figs/p1_fig2.png', fig2, width = 10, height = 7)
+
+
+## ----------------------------- figure 3 - correlation plot matrix of continuous variables
+trees.continuous <- trees %>%
+  select(HT:CR, DRYBIO_STEM:DRYBIO_FOLIAGE) %>%
+  pairs(panel = function (x, y, ...) {
+    points(x, y, ...)
+    abline(lm(y ~ x), col = "red")
+  }, pch = ".", cex = 4)
 
 
