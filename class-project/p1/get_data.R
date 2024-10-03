@@ -99,11 +99,12 @@ ggsave('class-project/figs/p1_fig2.png', fig2, width = 10, height = 7)
 
 
 ## ----------------------------- figure 3 - correlation plot matrix of continuous variables
+png(filename = "class-project/figs/p1_fig3.png", width = 4000, height = 3200, res=400)
 trees.continuous <- trees %>%
   select(HT:CR, DRYBIO_STEM:DRYBIO_FOLIAGE) %>%
   pairs(panel = function (x, y, ...) {
     points(x, y, ...)
     abline(lm(y ~ x), col = "red")
   }, pch = ".", cex = 4)
-
+dev.off()
 
