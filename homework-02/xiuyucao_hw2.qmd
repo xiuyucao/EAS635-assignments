@@ -1,0 +1,397 @@
+---
+title: 'EAS 635.001 Homework 2'
+embed-resources: true
+author: "Xiuyu Cao"
+date: "`r format(Sys.Date(), '%m/%d/%Y')`"
+format:
+  html:
+    code-folding: show
+    highlight: textmate
+    number-sections: true
+    theme: flatly
+    toc: TRUE
+    toc-depth: 4
+    toc-float:
+      collapsed: false
+      smooth-scroll: true
+---
+
+**Homework 2 aims to assess your ability to (1) calculate various characteristics of a random variable and a multivariate dataset, (2) determine whether or not variables in a dataset follow a normal distribution, and (3) perform a PCA.**
+
+**There are 4 questions total. Please be sure to submit your R code as well as the output in one of the following formats for full credit: .pdf, .html**
+
+```{r setup, message=F}
+## setup
+library(tidyverse)
+```
+
+## QUESTION 1
+
+**For Q1-Q4, load in and use the data from the `forestfires.csv` file. The dataset has been sourced from <https://archive.ics.uci.edu/dataset/162/forest+fires> , there are multiple sites with different coordinates(X & Y) in the dataset, which is recorded with multiple forest fire events and the corresponding weather conditions.**
+
+```{r}
+### LOAD IN CSV FILE ("forestfires.csv")
+fires <- read.csv('../data/hw02/forestfires.csv')
+```
+
+### PART A
+
+**Produce and show (1) a variance-covariance matrix and (2) a correlation matrix for the `fires` dataset. Please exclude any rows with missing data(NA values) first and exclude any variables that are inappropriate for these matrices.** 
+
+**Hints: (1 The step of removing rows with NA values is very important since many functions used in multivariate analysis don't accepct NA values as the input (2 there are 12 columns in total of the data, but not all of them are meaningful to be used as the input of following analysis, please check the data table as well as the source website and determine which variables you are going to use**
+
+```{r}
+## get variance-covariance and correlation matrices
+fires.continuous <- fires %>%
+  na.omit() %>%
+  select(FFMC:area)
+
+mat.cov <- cov(fires.continuous)  # variance-covariance matrix
+mat.cov
+
+mat.cor <- cor(fires.continuous)  # correlation matrix
+mat.cor
+```
+
+**1) Which two variables in the `fires` dataset are most highly correlated? (use code to identify)**
+
+**Extra Credit Opportunity: You could write your own function in R to help you calculate and return the most highly correlated variables, the basic structure of R function could be found in section 2.5 of Zelterman**
+```{r}
+## get the most highly correlated variables
+res <- as.data.frame(mat.cor) %>%
+  mutate(var1 = rownames(.)) %>%
+  gather(var2, cor, -var1) %>%
+  filter(var1 != var2) %>%
+  arrange(desc(cor))
+
+res[1,]  # most highly correlated variables
+```
+
+**2) Which two variables have the greatest covariance (absolute value)? Which variable has the smallest variance? (use code to identify)**
+
+ANSWER (FOR GREATEST COVARIANCE):
+```{r}
+## get the greatest covariance
+res <- as.data.frame(mat.cov) %>%
+  mutate(var1 = rownames(.)) %>%
+  gather(var2, cov, -var1) %>%
+  filter(var1 != var2) %>%
+  arrange(desc(abs(cov)))
+
+res[1,]  # greatest covariance
+```
+
+ANSWER (FOR SMALLEST VARIANCE):
+```{r}
+## get the smallest variance
+res <- as.data.frame(mat.cov) %>%
+  mutate(var1 = rownames(.)) %>%
+  gather(var2, cov, -var1) %>%
+  filter(var1 == var2) %>%
+  arrange(cov)
+
+res[1,]  # smallest variance
+```
+
+### PART B
+**Calculate the Euclidean distances between all possible pairs of samples gained at the sites whose id is 75 (should be 8 total samples) with AND without scaling the variables beforehand. Print the output of the 2 distance matrices.**
+
+```{r}
+### ENTER CODE FOR Q1 PART B HERE
+dat2calc <- fires %>%
+  na.omit() %>%
+  filter(id == 75) %>%
+  select(FFMC:area)
+
+## calculate Euclidean distances
+dist.unscaled <- dist(dat2calc, method = "euclidean")  # without scaling
+dist.unscaled
+
+dist.scaled <- dist(scale(dat2calc), method = "euclidean")  # with scaling
+dist.scaled
+```
+
+**Then, produce two dendrograms, one for each distance matrix (scaled and unscaled). To do so you can use the `hclust()` function with the distance matrix as input, and then use `plot()` on the output (please refer to textbook Zelterman 2015 page 288). No need for axes labels but please add a title. You are also encouraged to use other functions. Just make sure you understand the function you are using.**
+```{r}
+### ENTER CODE FOR Q1 PART B HERE
+hclust.unscaled <- hclust(dist.unscaled)
+plot(hclust.unscaled,
+     xlab='', sub='', ylab='', yaxt='n',
+     main = "Unscaled Euclidean Distance Dendrogram")
+
+hclust.scaled <- hclust(dist.scaled)
+plot(hclust.scaled,
+     xlab='', sub='', ylab='', yaxt='n',
+     main = "Scaled Euclidean Distance Dendrogram")
+```
+
+**Use your results to answer the two questions below:**
+
+**1) Why might scaling your variables be a necessary step to take before calculating the distances between samples?**
+
+ANSWER: When variables have different scales (e.g. 0 - 1 v.s. 0 - 1,000), the distance result will be dominated by the ones with larger scales.
+
+**2) Which two forest fires samples from id 75 (row #1 - #8) are the most similar? Which two are the most different? (use code to process the scaled distance matrix to get the result)**
+```{r}
+### ENTER CODE FOR Q1 PART B HERE
+res <- as.matrix(dist.scaled)
+res[lower.tri(res)] <- NA
+res <- as.data.frame(res) %>%
+  mutate(var1 = rownames(.)) %>%
+  gather(var2, dist, -var1) %>%
+  na.omit() %>%
+  filter(var1 != var2) %>%
+  arrange(dist)
+
+res[1,]  # most similar
+res[nrow(res),]  # most different
+```
+
+### PART C
+**Calculate the "Canberra" distances between all possible pairs of all samples (except for the samples that were filtered out in Part A) in the `fires` dataset. No need to print the output.Then produce and show a dendrogram based on the "Canberra" distances.**
+
+```{r}
+### ENTER CODE FOR Q1 PART C HERE
+dat2calc <- fires %>%
+  na.omit() %>%
+  select(FFMC:area)
+
+dist.canberra <- dist(dat2calc, method = "canberra")
+hclust.canberra <- hclust(dist.canberra)
+plot(hclust.canberra,
+     xlab='', sub='', ylab='', yaxt='n',
+     cex = .5,
+     main = "Canberra Distance Dendrogram")
+```
+
+## QUESTION 2
+### PART A
+**Produce a density plot of `temp` in the `fires` dataset without null values. Then, superimpose a plot of the normal probability density function for a variable with the same mean and standard deviation as the `temp` variable. Make the density plot blue and the normal probability density function red to distinguish between them. Make sure to appropriately label the plot axes and add a legend. Lines should be shown, not discrete points. (To clarify: there should only be one plot produced, but two curves plotted.)**
+```{r}
+### ENTER CODE FOR Q2 PART A HERE
+data2plot <- fires %>%
+  na.omit() %>%
+  select(temp) %>%
+  mutate(d.norm=dnorm(x=temp, mean=mean(temp), sd=sd(temp)))
+
+ggplot() +
+  theme_minimal() +
+  geom_histogram(data=data2plot, aes(x = temp, y=..density..), fill='skyblue', color=NA, bins = 20) +
+  stat_density(data=data2plot, aes(x = temp, color='temp'), geom='line') +
+  geom_line(data=data2plot, aes(x = temp, y=d.norm, color='normal')) +
+  scale_color_manual(name='Probability Density', 
+                     values = c('temp'='blue','normal'='red'),
+                     guide = guide_legend(override.aes = list(size = 10))) +
+  labs(title = "Density Plot of temp in fires Dataset Compared with Normal Distribution",
+       x = "temp", y = "Density") +
+  theme(legend.text=element_text(size=11))
+
+```
+
+### PART B
+**Produce TWO different plots (should be different types, normally we expect you to plot QQ plot and histogram, but other types of plots that could help address this situation are encouraged as well) to visually check for the normality of `temp` in the filtered `fires` dataset. Comment on whether or not the data for this variable is normally distributed and how you were able to determine this from the plots you produced.**
+
+```{r}
+### ENTER CODE FOR Q2 PART B HERE
+data2plot <- fires %>%
+  na.omit() %>%
+  select(temp)
+
+par(mfrow=c(1,2))
+hist(data2plot$temp, col='skyblue', main='Histogram of temp', xlab='temp', ylab='Frequency')
+qqnorm(data2plot$temp, main='QQ Plot of temp')
+qqline(data2plot$temp, col='red')
+```
+
+COMMENT: From the histogram, the data has a light skew. From the Q-Q plot, the middle portion of the data is close to normal distribution, with extremes deviating from the normal distribution
+
+
+### PART C
+**An arguably better way to test whether or not a variable is normally distributed, as opposed to producing a plot, is to use the Shapiro-Wilk test (`shapiro.test()`). The input is a vector of data and the output is the test statistic *W* and an associated p-value. If the p-value is less than the chosen $\alpha$, usually $\alpha = 0.05$, we reject the null hypothesis of the test, which is that the data are normally distributed, and conclude that the data are not normally distributed. For more information on the `shapiro.test()` function and an example of how to use it, type `?shapiro.test` in the console.**
+
+**Now, use the Shapiro-Wilk normality test to test whether or not `temp` is normally distributed. Print your W and p-values. Comment on your results: are the data normally distributed or not?**
+
+```{r}
+### ENTER CODE FOR Q2 PART C HERE
+shapiro.test(data2plot$temp)
+```
+
+COMMENT: The p-value is less than $\alpha=0.05$, we reject the null hypothesis, the data are not normally distributed.
+
+## QUESTION 3
+### PART A
+**Calculate and print the Mahalanobis distance for each row of the `fires` dataset.**
+```{r}
+### ENTER CODE FOR Q3 PART A HERE
+dat2calc <- fires %>%
+  na.omit() %>%
+  select(FFMC:area)
+
+mahalanobis.dist <- mahalanobis(dat2calc, colMeans(dat2calc), cov(dat2calc))
+mahalanobis.dist
+```
+
+### PART B
+**Produce a plot to determine if the `fires` data come from a multivariate normal distribution.**
+```{r}
+### ENTER CODE FOR Q3 PART B HERE
+qq.x <- qchisq((1:nrow(dat2calc)-0.5)/nrow(dat2calc), df = 9)
+qq.y <- sort(mahalanobis.dist)
+
+par(mfrow=c(1,2))
+
+range1 <- range(c(qq.x, qq.y))
+plot(qq.x, qq.y,
+     xlab = expression(paste(chi[9]^2, "Quantile")),
+     ylab = "Ordered distances",
+     xlim = range1, ylim = range1,
+     main = 'All Data')
+abline(a = 0, b = 1, col = "red")
+
+range2 <- c(0, 20)
+plot(qq.x, qq.y,
+     xlab = expression(paste(chi[9]^2, "Quantile")),
+     ylab = "",
+     xlim = range2, ylim = range2,
+     main = 'Zoomed In')
+abline(a = 0, b = 1, col = "red")
+```
+
+### PART C
+**Answer the two questions below:**
+
+**1) If data in a multivariate dataset come from a multivariate normal distribution, what kind of distribution will the Mahalanobis distance values follow? How do you determine the degrees of freedom? (Note: your answers should be general, not specific to any dataset.)**
+
+ANSWER: The Mahalanobis distance values will follow a chi-squared distribution (df = number of variables (ncol)).
+
+**2) Regarding the plot you made in Part B, do the data come from a multivariate normal distribution? Explain how you came to this conclusion. (i.e., What would you expect to see if data come from a multivariate normal distribution, and does your plot meet these expectations?)**
+
+ANSWER: If the data come from a multivariate normal distribution, the Mahalanobis distance values should follow a straight line. The plot does not show a straight line. Most of the data fall out of the straight line, only a few data points are close to the line. There are also some extreme outliers.
+
+## QUESTION 4
+### PART A
+
+**Conduct TWO principal components analysis (using whichever package and function you choose) of the `fires` data: one where the calculation uses the covariance matrix and one where the correlation matrix is used.**
+
+```{r}
+### ENTER CODE FOR Q4 PART A HERE
+dat2calc <- fires %>%
+  na.omit() %>%
+  select(FFMC:area)
+
+## PCA using covariance matrix
+pca.cov <- princomp(dat2calc, cor = F, scores = T)
+
+## PCA using correlation matrix
+pca.cor <- princomp(dat2calc, cor = T, scores = T)
+```
+
+### PART B
+
+**Report the number of components you think you need to explain the data and how much variance would be explained by your decision. Justify your decision by both summary your PCA result and displaying a plot showing the cumulative proportion of variance explained by each component.**
+
+**Do this for both PCAs you performed in Part A.**
+
+```{r}
+### ENTER CODE FOR Q4 PART B(Summaries of PCA results) HERE
+par(mfrow=c(1,2))
+screeplot(pca.cov, col='red', pch=16, type='lines', cex=1, lwd=2, main='Using Covariance Matrix')
+screeplot(pca.cor, col='red', pch=16, type='lines', cex=1, lwd=2, main='Using Correlation Matrix')
+
+## cov pca
+pca.cov.var <- as.data.frame(pca.cov$sdev)
+names(pca.cov.var) <- "sdev"
+pca.cov.var <- pca.cov.var %>%
+  mutate(var = sdev^2,
+         prop = var/sum(var),
+         cum.prop = cumsum(prop))
+head(pca.cov.var)
+
+## cor pca
+pca.cor.var <- as.data.frame(pca.cor$sdev)
+names(pca.cor.var) <- "sdev"
+pca.cor.var <- pca.cor.var %>%
+  mutate(var = sdev^2,
+         prop = var/sum(var),
+         cum.prop = cumsum(prop))
+head(pca.cor.var)
+```
+
+
+NUMBER OF COMPONENTS (COVARIANCE MATRIX): 1 or 2
+
+VARIANCE EXPLAINED (COVARIANCE MATRIX): 83% for PC1, 94% for PC1 and PC2
+
+NUMBER OF COMPONENTS (CORRELATION MATRIX): 2
+
+VARIANCE EXPLAINED (CORRELATION MATRIX): 81%
+
+**Based on your results, answer the question below:**
+
+**Which PCA produces a result where fewer components explain more of the variation in the data? Why might this be the case?**
+
+ANSWER: Covariance gets fewer because it's not scaled (correlation scales the values to be comparable). Thus we see one PC of covariance method explains a lot of the variance, probably due to some variables with large scale dominating the result.
+
+
+### PART C
+**Print the loadings and present a biplot of the first two components for the PCA created using the correlation matrix in Q4 Part A (should be like Figure 8.2 on textbook Zelterman 2015 page 213)). Which variable contributes most to each component (use code to identify)? Interpret your biplot**
+
+```{r}
+### ENTER CODE FOR Q4 PART C HERE
+## get loadings
+pca.cor$loadings
+# the variables contributing most to PC1
+sort(abs(pca.cor$loadings[,1]), decreasing = T)[1]
+# the variables contributing most to PC2
+sort(abs(pca.cor$loadings[,2]), decreasing = T)[1]
+
+
+## biplot
+biplot(pca.cor, cex=c(.5, .75),
+       main="Biplot of PCA using Correlation Matrix")
+```
+
+Contribute most to component 1: `temp`
+
+Contribute most to component 2: `RH`
+
+INTERPRETATION OF BIPLOT:
+
+What's the axes for the scatter points: (left&bottom or right&top)
+
+* right bottom for scores of PC1
+* left bottom for scores of PC2
+
+What's the meaning of the numbers on these axes:
+
+* The values of the scores for each sample on the corresponding principal component.
+
+What's the axes for the arrows: (left&bottom or right&top)
+
+* right top for loadings of PC1
+* left top for loadings of PC2
+
+What's the meaning of the numbers on these axes:
+
+* The values of the loadings for each variable on the corresponding principal component.
+
+
+### PART D
+
+**Answer the question below:**
+
+**What is the difference between loadings and scores in the context of PCA?**
+
+ANSWER: 
+
+* Loadings - coefficients of the original variables in the principal components
+* Scores - projection of the original data onto the principal components
+
+**Extra Credit Opportunity: According to what we have learned in class, the arrows in the biplot represent the loadings of the variables, but in the biplot you created, the arrows are not pointing to the loadings, all the arrows seem a bit shorter than they should be. Can you explain why this is the case?**
+
+ANSWER: The arrows are scaled. The information the relative length and the direction of the arrows convey matters, not the absolute length of the arrows. An unscaled biplot can also be produced.
+
+```{r}
+biplot(pca.cor, cex=c(.5, .75), scale=0,
+       main="Biplot of PCA using Correlation Matrix")
+```
