@@ -56,3 +56,6 @@ rsconnect/
 
 # symbolic links
 FIADB
+
+# ppt file
+*.pptx
