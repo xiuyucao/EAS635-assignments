@@ -40,9 +40,9 @@ p.scree <- fviz_eig(trees.pca, addlabels=T,
 
 ## Biplot
 p.biplot <- fviz_pca_biplot(trees.pca,
-                            fill.ind=trees$GENUS, col.ind='white', palette='igv', pointshape=21, pointsize=1.5,
+                            fill.ind=trees$GENUS, col.ind='white', palette='npg', pointshape=21, pointsize=1.5,
                             label='var', labelsize=3, repel=T,  # set loading label paras
-                            col.var='red') +  # color of the loading arrows
+                            col.var='black') +  # color of the loading arrows
   labs(title = "", fill = "Genus",
        x = "Principal Component 1",  
        y = "Principal Component 2") + 
@@ -95,4 +95,3 @@ fig <- ggarrange(p.biplot, stats,
                  ncol=2, nrow=1)
 
 ggsave('class-project/figs/p2-fig1.png', fig, width=12.5, height=10)
-
