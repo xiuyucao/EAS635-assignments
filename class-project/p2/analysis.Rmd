@@ -1,0 +1,91 @@
+---
+title: "Project phase 2 code"
+author: "Xiuyu Cao"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+# Appendix. Code
+```{r load packages, echo=T, message=F}
+library(tidyverse)
+library(FactoMineR)
+library(factoextra)
+```
+
+
+```{r get data}
+trees <- readRDS('../../data/proj/input_trees.rds')
+```
+
+
+```{r PCA}
+var4pca <- c('HT', 'DIA', 'CR', 'DRYBIO_STEM', 'DRYBIO_STEM_BARK', 'DRYBIO_BRANCH', 'DRYBIO_FOLIAGE')
+
+subset <- names(trees) %in% var4pca
+
+## conducting PCA analysis, get the first few principle components
+trees.pca <- PCA(scale(trees[, subset]), graph=F)
+ind <- get_pca_ind(trees.pca)
+
+result <- trees
+result$PC1 <- ind$coord[,1]
+result$PC2 <- ind$coord[,2]
+result$PC3 <- ind$coord[,3]
+```
+
+
+
+
+```{r plot}
+p.biplot <- fviz_pca_biplot(trees.pca, fill.ind = trees$GENUS, col.ind = "white", geom.ind = "point", palette = 'igv',
+                label ="var", col.var = "black", labelsize = 2, repel=TRUE,
+                pointshape = 21, pointsize = 1, alpha.ci = 0.5) + 
+  labs(title = "", x = "Principal Component 1 (PC1)", 
+       y = "Principal Component 2 (PC2)",
+       fill = "Genus") + 
+  theme(
+    legend.key.size = unit(1, "cm"),
+    legend.key.width = unit(.5,"cm"),
+    legend.text=element_text(size=10),
+    legend.title=element_text(size=10),
+    title = element_text(size = 6, face = "bold"),
+    text = element_text(size = 6),
+    axis.title = element_text(size = 6),
+    axis.text = element_text(size = 6)) +
+  xlim(-10, 20) +
+  ylim(-10, 10)
+
+
+
+#### Extract and plot the loadings of the PCA
+var <- trees.pca$var
+df.loadings <- data.frame(tree = rep(row.names(var$coord),3), ########################### set the high and low here
+                          val = c(var$coord[,1],var$coord[,2], var$coord[,3]),
+                          contr = c(ifelse(var$contrib[,1]>(1/12), 'High', 'Low'),
+                                    ifelse(var$contrib[,2]>(1/12), 'High', 'Low'),
+                                    ifelse(var$contrib[,3]>(1/12), 'High', 'Low')),
+                          PC = c(rep("PC1",length(row.names(var$coord))),
+                                 rep("PC2",length(row.names(var$coord))),
+                                 rep("PC3",length(row.names(var$coord)))))
+
+
+##### figure 1
+p.loadings <- ggplot(data=df.loadings, aes(x=tree, y=val, fill = contr)) + facet_grid(. ~ PC, scales = "free_y") +
+  geom_bar(stat="identity", position=position_dodge()) + coord_flip() +
+  scale_fill_manual(values=c("#E69F00", "#999999")) + theme_classic() + 
+  labs(y="Loadings", x = "EFP") + theme(legend.position='none',
+                                        title = element_text(size = 6, face = "bold"),
+                                        text = element_text(size = 4),
+                                        axis.title = element_text(size = 6),
+                                        axis.text = element_text(size = 6))
+
+fviz_eig(trees.pca, addlabels=F,  
+               barfill="white", barcolor ="darkblue",
+               ncp = 8, labelsize = 2,
+               linecolor ="red") + ylim(0, 61) + 
+  theme_classic() + labs(title = "", x = "Principal Components (PC)", y = "Explained variance [%]") + 
+  theme(title = element_text(size = 6, face = "bold"),
+        text = element_text(size = 4),
+        axis.title = element_text(size = 6),
+        axis.text = element_text(size = 6))
+```
