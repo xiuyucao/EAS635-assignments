@@ -24,6 +24,10 @@ result$PC1 <- ind$coord[,1]
 result$PC2 <- ind$coord[,2]
 result$PC3 <- ind$coord[,3]
 
+# save the pca result for later linear regression
+pca2save <- select(result, -DSTRBYR1)
+saveRDS(pca2save, 'data/proj/input_pca.rds')
+
 
 ## ---------------------------------------- Figures ---------------------------------------- ##
 ## Scree plot
