@@ -62,7 +62,7 @@ p.biplot <- fviz_pca_biplot(trees.pca,
 ## loadings
 # Extract the loadings of the PCA
 var <- trees.pca$var
-df.loadings <- data.frame(tree = rep(row.names(var$coord),3), ########################### set the high and low here
+df.loadings <- data.frame(tree = rep(row.names(var$coord),3),
                           val = c(var$coord[,1],var$coord[,2], var$coord[,3]),
                           contrib = c(var$contrib[,1],var$contrib[,2], var$contrib[,3]),
                           PC = c(rep("PC1",length(row.names(var$coord))),

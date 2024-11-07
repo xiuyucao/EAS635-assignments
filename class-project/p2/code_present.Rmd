@@ -1,0 +1,206 @@
+---
+title: ""
+author: ""
+date: ""
+output: pdf_document
+---
+
+# Appendix. Code
+## PCA
+```{r eval=F}
+## Code reference - Migliavacca et al., 2021
+library(tidyverse)
+library(FactoMineR)
+library(factoextra)
+library(ggpubr)
+
+
+## ----------------------------- Load Data ----------------------------- ##
+trees <- readRDS('data/proj/input_trees.rds') %>%
+  filter(if_all(c(HT, DIA, CR, # filter out rows with these cols having NAs
+                  DRYBIO_STEM, 
+                  DRYBIO_STEM_BARK, 
+                  DRYBIO_BRANCH, 
+                  DRYBIO_FOLIAGE), ~ !is.na(.)))
+
+
+## -------------------------------- PCA -------------------------------- ##
+trees4pca <- trees %>%  # select continuous variables
+  select(HT:CR, DRYBIO_STEM:DRYBIO_FOLIAGE)
+
+trees.pca <- PCA(scale(trees4pca), graph=F)  # do PCA
+ind <- get_pca_ind(trees.pca)  # get result
+
+# combine the results with the original data
+result <- trees
+result$PC1 <- ind$coord[,1]
+result$PC2 <- ind$coord[,2]
+result$PC3 <- ind$coord[,3]
+
+# save the pca result for later linear regression
+pca2save <- select(result, -DSTRBYR1)
+saveRDS(pca2save, 'data/proj/input_pca.rds')
+
+
+## ------------------------------ Figures ------------------------------ ##
+## Scree plot
+p.scree <- fviz_eig(trees.pca, addlabels=T,  
+                    barfill="white", barcolor ="darkblue",
+                    ncp = 6, labelsize = 2,
+                    linecolor ="red") + 
+  ylim(0, 63) + 
+  theme_classic() + 
+  labs(title = "", x = "Principal Components", y = "Explained variance (%)") + 
+  theme(axis.title = element_text(size = 10),
+        axis.text = element_text(size = 10))
+
+
+## Biplot
+p.biplot <- fviz_pca_biplot(trees.pca,
+                            fill.ind=trees$GENUS, col.ind='white', 
+                            palette='npg', pointshape=21, pointsize=1.5,
+                            label='var', labelsize=3, repel=T,  # loading label
+                            col.var='black') +  # color of the loading arrows
+  labs(title = "", fill = "Genus",
+       x = "Principal Component 1",  
+       y = "Principal Component 2") + 
+  theme(legend.position = "bottom",
+        legend.key.size = unit(1, "cm"), legend.key.width = unit(.5,"cm"),
+        legend.text=element_text(size=10), legend.title=element_blank(), 
+        text = element_text(size = 10),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 10)) +
+  guides(fill = guide_legend(nrow = 2)) + 
+  xlim(-10, 10) + ylim(-10, 10)
+
+
+## loadings
+# Extract the loadings of the PCA
+var <- trees.pca$var
+df.loadings <- data.frame(tree = rep(row.names(var$coord),3),
+                          val = c(var$coord[,1],var$coord[,2], var$coord[,3]),
+                          contrib = c(var$contrib[,1],
+                                      var$contrib[,2], 
+                                      var$contrib[,3]),
+                          PC = c(rep("PC1",length(row.names(var$coord))),
+                                 rep("PC2",length(row.names(var$coord))),
+                                 rep("PC3",length(row.names(var$coord)))))
+
+p.loadings <- ggplot() +  # loading values
+  geom_bar(data=df.loadings, aes(x=tree, y=val), 
+           fill='darkorange3', stat="identity", position=position_dodge()) + 
+  facet_grid(. ~ PC, scales = "free_y") +
+  coord_flip() + 
+  theme_minimal() + 
+  labs(y="Loadings", x = "") + 
+  theme(legend.position='none', 
+        text = element_text(size = 10),
+        axis.title = element_text(size = 10), 
+        axis.text = element_text(size = 10))
+
+p.contribution <- ggplot() +  # percentage contribution
+  geom_bar(data=df.loadings, aes(x=tree, y=contrib), 
+           fill='darkorange3', stat="identity", position=position_dodge()) + 
+  facet_grid(. ~ PC, scales = "free_y") +
+  coord_flip() + 
+  theme_minimal() + 
+  labs(y="Contribution (%)", x = "") + 
+  theme(legend.position='none', 
+        text = element_text(size = 10),
+        axis.title = element_text(size = 10), 
+        axis.text = element_text(size = 10))
+
+
+## final figure
+stats <- ggarrange(p.scree, p.loadings, p.contribution,
+                   labels = c("b", "c", "d"),
+                   ncol=1, nrow=3)
+fig <- ggarrange(p.biplot, stats, 
+                 labels = c("a", ""),
+                 ncol=2, nrow=1)
+
+ggsave('class-project/figs/p2-fig1.png', fig, width=12.5, height=10)
+```
+
+## Linear regression
+```{r eval=F}
+library(tidyverse)
+library(stargazer)
+library(ggpubr)
+library(car)
+
+
+## ------------------------ Load and Preprocess Data ------------------------ ##
+trees <- readRDS('data/proj/input_pca.rds') %>%
+  select(PC1, CCLCD, GENUS, DSTRBCD1) %>%
+  rename(DSTRBCD=DSTRBCD1) %>%
+  mutate(log_PC1=log(PC1+3.47)) %>%  # log transform the response variable
+  mutate(CCLCD=factor(CCLCD), 
+         GENUS = factor(GENUS), 
+         DSTRBCD = factor(DSTRBCD))  # convert to factors
+
+
+## --------------------------- Linear Regression --------------------------- ##
+mod <- lm(log_PC1~CCLCD+GENUS*DSTRBCD, data = trees)
+
+
+## --------------------------- Check assumptions --------------------------- ##
+## Normality of residuals
+normality <- ggplot() +
+  geom_qq(data = data.frame(residuals = residuals(mod)), 
+          aes(sample = residuals), shape=1) +
+  geom_qq_line(data = data.frame(residuals = residuals(mod)), 
+               aes(sample = residuals), color = "red") + 
+  theme_minimal() +
+  xlab('Normal Quantiles') + ylab('Residuals') +
+  theme(axis.title = element_text(size=10),
+        axis.text = element_text(size=10))
+
+## homoscedasticity
+homo <- ggplot() +
+  geom_point(data = data.frame(fitted = fitted(mod), 
+                               residuals = residuals(mod)), 
+             aes(x = fitted, y = residuals), shape=1) +
+  geom_hline(yintercept = 0, color = "red") +  # Add horizontal line at 0
+  xlab("Fitted") + 
+  ylab("Residuals") +
+  theme_minimal() +
+  theme(axis.title = element_text(size=10),
+        axis.text = element_text(size=10))
+
+## final figure
+fig.test <- ggarrange(normality, homo, nrow=2, ncol=1, 
+                      labels=c('a', 'b'))
+
+
+## ------------------------------- Result ------------------------------- ##
+table <- stargazer(mod, type = "text")
+
+# get mean and CIs of the coes
+coef_values <- coef(mod)
+ci_values <- confint(mod)
+coef_df <- data.frame(  # Combine results into a data frame
+  variable = names(coef_values),
+  estimate = coef_values,
+  conf.low = ci_values[, 1],
+  conf.high = ci_values[, 2]) %>%
+  na.omit()
+coef_df$variable <- factor(coef_df$variable, 
+                           levels = coef_df$variable)  # set the order of the x
+
+coe <- ggplot() +
+  geom_pointrange(data=coef_df, 
+                  aes(x = variable, y = estimate, 
+                      ymin = conf.low, ymax = conf.high)) +
+  theme_minimal() +
+  geom_hline(yintercept = 0, color = "red") +  # Add horizontal line at 0
+  labs(title = '', x = 'Variable', y = 'Coefficient') +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1),
+        axis.title = element_text(size=10),
+        axis.text = element_text(size=10))
+
+## final fig
+fig <- ggarrange(fig.test, coe, ncol=2, nrow=1, 
+                 labels=c('', 'c'), widths = c(1, 1.2))
+ggsave('class-project/figs/p2-fig2.png', fig, width=10, height=8)
+```
