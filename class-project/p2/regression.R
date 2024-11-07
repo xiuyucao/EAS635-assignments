@@ -53,7 +53,7 @@ coef_df <- data.frame(  # Combine results into a data frame
   conf.low = ci_values[, 1],
   conf.high = ci_values[, 2]) %>%
   na.omit()
-
+coef_df$variable <- factor(coef_df$variable, levels = coef_df$variable)  # set the order of the x
 
 coe <- ggplot() +
   geom_pointrange(data=coef_df, aes(x = variable, y = estimate, ymin = conf.low, ymax = conf.high)) +
