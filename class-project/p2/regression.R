@@ -8,12 +8,13 @@ library(car)
 ## ---------------------------------- Load and Preprocess Data ---------------------------------- ##
 trees <- readRDS('data/proj/input_pca.rds') %>%
   select(PC1, CCLCD, GENUS, DSTRBCD1) %>%
+  rename(DSTRBCD=DSTRBCD1) %>%
   mutate(log_PC1=log(PC1+3.47)) %>%  # log transform the response variable
-  mutate(CCLCD = factor(CCLCD), GENUS = factor(GENUS), DSTRBCD1 = factor(DSTRBCD1))  # convert to factors
+  mutate(CCLCD=factor(CCLCD), GENUS = factor(GENUS), DSTRBCD = factor(DSTRBCD))  # convert to factors
 
 
 ## ------------------------------------- Linear Regression ------------------------------------- ##
-mod <- lm(log_PC1~CCLCD+GENUS*DSTRBCD1, data = trees)
+mod <- lm(log_PC1~CCLCD+GENUS*DSTRBCD, data = trees)
 
 
 ## ------------------------------------- Check assumptions ------------------------------------- ##
