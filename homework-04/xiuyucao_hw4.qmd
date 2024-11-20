@@ -1,0 +1,407 @@
+---
+title: 'EAS 635.001 Homework 4'
+embed-resources: true
+author: "Xiuyu Cao"
+date: "`r format(Sys.Date(), '%m/%d/%Y')`"
+format:
+  html:
+    code-folding: show
+    highlight: textmate
+    number-sections: true
+    theme: flatly
+    toc: TRUE
+    toc-depth: 4
+    toc-float:
+      collapsed: false
+      smooth-scroll: true
+---
+
+**In Homework 4, you will gain familiarity with (1) correspondence analysis and (2) regression. You will also practice performing and interpreting a PCA and cluster analysis**
+
+**There are 3 questions total. Please be sure to submit your R code as well as the output in one of the following formats for full credit: .pdf, .html, .doc, .docx**
+
+**The data set we will use for this homework is from the paper [Global effects of soil and climate on leaf photosynthetic traits and rates](https://onlinelibrary.wiley.com/doi/full/10.1111/geb.12296), you can access the open source metadata [here](https://datadryad.org/stash/dataset/doi:10.5061/dryad.j42m7). The research conducts multiple experiments to investigate the effects of soil and climate on leaf photosynthetic traits and rates at each site,
+which cause different resolutions between the vegetation traits and soil properties. To unify the resolution, the vegetation traits of each site were averaged. The data set after the averaging process is provided in the `soilveg_cleaned.csv` file.**
+
+### Load Packages
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(dendextend)
+library(FactoMineR)
+```
+
+
+## QUESTION 1
+**For Q1, load in and use the data from the `soilveg_cleaned.csv` file.**
+```{r}
+soilveg <- read.csv("../data/hw04/soilveg_cleaned.csv")
+```
+
+### PART A
+**Run a correspondence analysis on the variable "GF" and "ELEV_Cate" of the data set and produce a plot of the outcome. Be sure to convert the original values of these two variables to a contingency table first**
+
+```{r}
+library(ca)
+c_table <- table(soilveg$GF, soilveg$ELEV_Cate)  # get the contingency table for GF and ELEV_Cate
+res.ca <- ca(c_table)
+summary(res.ca)
+plot(res.ca)
+```
+
+### PART B
+**Answer the following general questions:**
+
+**1) In correspondence analysis, how "mass" is calculated? [useful reading link](https://vgonzenbach.github.io/multivariate-cookbook/correspondence-analysis.html#masses-and-weights)**
+
+ANSWER: The inverse of the proportion one row/column represents in the total table.
+
+**2) In correspondence analysis, how "inertia" is calculated? (Bonus question)**
+
+ANSWER: Chi-squared statistic of the table normalized by the total sum of the table.
+
+**3) When would you want to use a correspondence analysis? Specifically, what type of data would be appropriate and how would these data be represented in the cells of your dataframe/spreadsheet?**
+
+ANSWER: When analyzing relationships between categorical variables. Contingency table with counts of the number of times each combination of categories occurs is appropriate for correspondence analysis. each row and column is a different category of the variables, and cell values are the frequencies of each combination of categories occurs.
+
+### PART C
+
+**Refer to the results of your correspondence analysis (performed in Q1 Part A) to answer the following questions:**
+
+**1) What is the name of the column variable with the largest mass? Report the mass as well.**
+
+ANSWER: `VryL` with a mass of 379.
+
+**2) Based on visual inspection of the plot you produced in Part A, which row and column variables appear to be the most strongly correlated?**
+
+ANSWER: `Low` and `V`; `Very Low` and `T`.
+
+### PART D
+**1) Perform a chi-squared test on the contingency table you created in the last part using the `chi.sq()` function or "by hand".**
+```{r}
+chisq.res <- chisq.test(c_table)
+chisq.res
+```
+
+**2) How many degrees of freedom are there (using this specific dataset)? How did you calculate it (without using any R code)?**
+
+ANSWER: 20. $df=(n_{row}-1)\times(n_{col}-1)$
+
+**3) What is the null hypothesis of this test and what is the alternative hypothesis? Based on your results, do you reject or fail to reject the null hypothesis?**
+
+ANSWER: The null hypothesis is that the two variables are independent. The alternative hypothesis is that the two variables are dependent. We fail to reject the null hypothesis for a P value of 0.13 > 0.05.
+
+**4) Print the Pearson residuals (show code), report the largest and smallest values, and discuss the relevance of these values in the context of your data (i.e., what do the residual values you report tell you about your data).**
+```{r}
+chisq.res$residuals
+# largest residual
+max(abs(chisq.res$residuals))
+which(abs(chisq.res$residuals) == max(abs(chisq.res$residuals)), arr.ind = TRUE)
+# lowest residual
+min(abs(chisq.res$residuals))
+which(abs(chisq.res$residuals) == min(abs(chisq.res$residuals)), arr.ind = TRUE)
+```
+
+LARGEST RESIDUAL: 2.253
+
+LOWEST RESIDUAL: 0.075
+
+RELEVANCE: The residuals are the differences between the observed and expected values. The largest residual indicates the largest difference between the observed and expected values, while the smallest residual indicates the smallest difference. The residuals can be used to identify the cells that contribute the most to the chi-squared statistic.
+
+
+## QUESTION 2
+### PART A
+**Run a pairs plot on variables "Nmass", "Amass", "Aarea", "RAD", "PETf", "SUNmean", "pH", "Pavail", "PPTmean", "SAND", "TMPmean" of your data. Next, use `log()` to transform these variables and create a second pairs plot. Then answer the two questions below. To better demonstrate the traits of the pairs plot, we encourage you to use the `GGally` package, in particular the `ggpairs()` function for this question.**
+
+```{r message=F}
+# Your code for  pairs plot here
+library(GGally)
+soilveg4lm <- select(soilveg, Nmass, Amass, Aarea, RAD, PETf, SUNmean, pH, Pavail, PPTmean, SAND, TMPmean)
+ggpairs(soilveg4lm)
+```
+
+```{r message=F}
+# Your code for log-transformed pairs plot here
+sym_log <- function(x) {
+  sign(x) * log(1 + abs(x))
+  }
+soilveg4lm_log <- sym_log(soilveg4lm) %>%
+  na.omit()
+ggpairs(soilveg4lm_log)
+```
+
+**1) How do the plots (using the raw data vs. using the log-transformed data) differ?**
+
+ANSWER: The log-transformed data shows a more linear relationship between the variables compared to the raw data. Large values are compressed and small values are expanded. While the effect is not so good when it comes to variables whose original range is narrow.
+
+**2) Which data (raw or log-transformed) would you use for a linear regression? Why? (Hint: if you get stuck, try producing a boxplot of your data before and after log-transformation)**
+
+ANSWER: I would use the log-transformed data because it better meets the assumptions of linear regression, such as linearity and homoscedasticity. And it's good for originally skewed data.
+
+### PART B
+**Start with a model only including the intercept term and perform a step-wise linear regression in forward direction using `Nmass` as your dependent variable and `RAD`, `PETf`, `SUNmean`, `pH`, `Pavail`, `PPTmean`, `SAND`, and `TMPmean` as your independent variables. Report the best fitting model and the corresponding** $R^2$ **and** $p$ **values. Additionally, plot the residuals for the best fitting model using a scatter plot (x = fitted values, y = residuals) and a QQ-plot.**
+
+**To implement the step-wise linear regression, you can use the `stepAIC()` function from the `MASS` package.**
+
+**Do this for the original variables listed above and their log-transformed counterparts.**
+```{r,warning=FALSE, message=FALSE}
+library(MASS) # for stepAIC
+# Step-wise linear regression for original data
+lm.initial <- lm(Nmass ~ 1, data = soilveg)
+lm.step <- stepAIC(lm.initial, direction='forward', scope=formula(Nmass ~ RAD + PETf + SUNmean + pH + Pavail + PPTmean + SAND + TMPmean))
+summary(lm.step)
+```
+
+```{r}
+#Plot the residuals for the best fitting model
+ggplot() +
+  geom_point(data = data.frame(fitted = fitted(lm.step), residuals = residuals(lm.step)), 
+             aes(x = fitted, y = residuals), shape=1) +
+  geom_hline(yintercept = 0, color = "red") +  # Add horizontal line at 0
+  xlab("Fitted") + ylab("Residuals") +
+  theme_minimal()
+```
+
+```{r}
+#QQ-plot
+ggplot() +
+  geom_qq(data = data.frame(residuals = residuals(lm.step)), aes(sample = residuals), shape=1) +
+  geom_qq_line(data = data.frame(residuals = residuals(lm.step)), aes(sample = residuals), color = "red") + 
+  theme_minimal() +
+  xlab('Normal Quantiles') + ylab('Residuals')
+```
+
+```{r}
+#Model,Residuals,QQ-plot for log-transformed data
+soilveg.log <- soilveg %>%
+  dplyr::select(Nmass, RAD, PETf, SUNmean, pH, Pavail, PPTmean, SAND, TMPmean) %>%
+  na.omit() %>%
+  sym_log()
+
+# Step-wise linear regression
+log_lm.initial <- lm(Nmass ~ 1, data = soilveg.log)
+log_lm.step <- stepAIC(log_lm.initial, direction='forward', scope=formula(Nmass ~ RAD + PETf + SUNmean + pH + Pavail + PPTmean + SAND + TMPmean))
+summary(log_lm.step)
+
+# residual plot
+ggplot() +
+  geom_point(data = data.frame(fitted = fitted(log_lm.step), residuals = residuals(log_lm.step)), 
+             aes(x = fitted, y = residuals), shape=1) +
+  geom_hline(yintercept = 0, color = "red") +  # Add horizontal line at 0
+  xlab("Fitted") + ylab("Residuals") +
+  theme_minimal()
+
+# QQ-plot
+ggplot() +
+  geom_qq(data = data.frame(residuals = residuals(log_lm.step)), aes(sample = residuals), shape=1) +
+  geom_qq_line(data = data.frame(residuals = residuals(log_lm.step)), aes(sample = residuals), color = "red") + 
+  theme_minimal() +
+  xlab('Normal Quantiles') + ylab('Residuals')
+```
+
+BEST FITTING MODEL FOR ORIGINAL DATA IS: Nmass ~ SAND + PPTmean + Pavail
+
+R2 FOR THIS MODEL: 0.10
+
+P-VALUE FOR THIS MODEL: $2.14\times10^{-5}$
+
+BEST FITTING MODEL FOR TRANSFORMED DATA IS: Nmass ~ TMPmean + SAND + PPTmean
+
+R2 FOR THIS MODEL: 0.13
+
+P-VALUE FOR THIS MODEL: $1.123\times10^{-6}$
+
+### PART C
+**Based on your results from Part B, answer the following questions.**
+
+**1) Does log-transforming your data matter (i.e., what was the impact of log-transforming your data and why)?**
+
+ANSWER: The model formula is changed, and log-transforming the data also improved the model fit, as indicated by the higher $R^2$ value. Because the log-transformed data better met the assumptions of linear regression.
+
+**2) Comment on the residual plots for each best-fitting model. What would you hope that these plots would look like (list 3 expectations total and provide at least one expectation for each type of plot)? Do your results meet your expectations?**
+
+ANSWER: The residual plot should have a random pattern with no clear trend, scattering evenly around 0 along the fitted value. and the QQ-plot should have the residuals following a straight line. The residuals should be normally distributed. The log-transformed results meet my expectations. The result from the original data was not so good, as indicated in the QQ-plot, not so aligned with normal distribution.
+
+**3) When would you want to log-transform a variable prior to analysis?**
+
+ANSWER: When data is skewed, possibily causing non-normal distribution of the residuals.
+
+**4) What do $R^2$ and $p$ values you obtained tell you about the model? Would you want to use these models to make predictions (remember to provide your reasoning)?**
+
+ANSWER: $R^2$ tells me how much variability is explained by the model, and the $p$ value tells me whether the relationship between the predictors and the response variable is statistically significant.
+
+**5) Other than transforming your data, name another modification of your dataset that you could/should make prior to running your regression? (You don't need to really do that using R code)**
+
+ANSWER: Clean the data, check for multicollinearity.
+
+### PART D
+**Based on the best-fitting model for your raw data and the best-fitting model for your log-transformed data, plot the fitted vs. observed data. (Note: two plots should be produced, one using the raw data and the appropriate model and one using the log-transformed data and the appropriate model.) Include a 1-1 line on each plot and label your axes appropriately.**
+```{r}
+#Plot for raw data
+data2plot <- data.frame(fitted = fitted(lm.step), observed = soilveg$Nmass)
+
+ggplot() +
+  geom_point(data=data2plot, aes(x = observed, y = fitted)) +
+  geom_abline(intercept = 0, slope = 1, color = "red") +  # Add 1-1 line
+  xlab("Observed") + ylab("Fitted") +
+  theme_minimal() +
+  xlim(0, 5) + ylim(0, 5)
+```
+
+```{r}
+#Plot for log-transformed data
+data2plot <- data.frame(fitted = fitted(log_lm.step), observed = soilveg.log$Nmass)
+
+ggplot() +
+  geom_point(data=data2plot, aes(x = observed, y = fitted)) +
+  geom_abline(intercept = 0, slope = 1, color = "red") +  # Add 1-1 line
+  xlab("Observed") + ylab("Fitted") +
+  theme_minimal() +
+  xlim(0, 2) + ylim(0, 2)
+```
+
+### PART E
+**Run a multivariate regression on the log-transformed data from Question 2. The dependent variables you should include are: `Nmass`, and `Amass`; the independent variables you should include are `pH` and `PETf`. Report the coefficients.**
+```{r}
+soilveg.multiv <- soilveg %>%
+  dplyr::select(Nmass, Amass, pH, PETf) %>%
+  na.omit() %>%
+  sym_log()
+
+lm.multiv <- lm(cbind(Nmass, Amass) ~ pH + PETf, data = soilveg.multiv)
+summary(lm.multiv)
+
+# Report the coefficients
+coefficients(lm.multiv)
+```
+
+### PART F
+**Answer the following questions:**
+
+**1) When might it be better to use multivariate regression instead of modelling multiple dependent variables separately?**
+
+ANSWER: When the dependent variables are correlated, and the independent variables are the same for all dependent variables.
+
+**2) When would you want to use a GLM instead of a typical multiple/multivariate regression?**
+
+ANSWER: When the dependent variable is not normally distributed, or when the relationship between the dependent and independent variables is not linear.
+
+**3) When is it appropriate to use logistic regression?**
+
+ANSWER: When the dependent variable is binary.
+
+
+## QUESTION 3
+### PART A
+
+**Perform a PCA on the raw data(soilveg_cleaned.csv). Only use the climate variables (columns 23-40) in your PCA. Summary your PCA result, based on the result, report the number of components you would recommend proceeding with in an analysis as well as the total variance explained by these components. And produce a biplot.**
+
+```{r}
+library(factoextra)
+
+# Your PCA code here
+soilveg <- read.csv("../data/hw04/soilveg_cleaned.csv")
+soilveg_climate <- soilveg[, 23:40]
+
+pca.res <- PCA(soilveg_climate, graph=F) 
+
+
+ind <- get_pca_ind(pca.res)  # get result
+result <- soilveg_climate
+# combine the results with the original data
+result$PC1 <- ind$coord[,1]
+result$PC2 <- ind$coord[,2]
+result$PC3 <- ind$coord[,3]
+
+## Scree plot
+fviz_eig(pca.res, addlabels=T,  
+                    barfill="white", barcolor ="darkblue",
+                    ncp = 6, labelsize = 2,
+                    linecolor ="red") + 
+  ylim(0, 63) + 
+  theme_classic() + 
+  labs(title = "", x = "Principal Components", y = "Explained variance (%)") + 
+  theme(axis.title = element_text(size = 10),
+        axis.text = element_text(size = 10))
+```
+
+ANSWER: I will use 3 PCs which explained 81.6% of the variance.
+
+```{r}
+# Your code for biplot here
+fviz_pca_biplot(pca.res, label='var', repel=T,  # set loading label paras
+                col.var='black') +  # color of the loading arrows
+  labs(title = "", x = "Principal Component 1", y = "Principal Component 2") + 
+  theme(legend.position = "bottom",
+        legend.key.size = unit(1, "cm"), legend.key.width = unit(.5,"cm"),
+        legend.text=element_text(size=10), legend.title=element_blank(), 
+        text = element_text(size = 10),
+        axis.title = element_text(size = 10),axis.text = element_text(size = 10)) +
+  guides(fill = guide_legend(nrow = 2)) + 
+  xlim(-10, 10) + ylim(-10, 10)
+```
+
+### PART B
+**Perform a backward step-wise linear regression for each of the following dependent variables: `Nmass`, `Amass`, and `SLA`. Include your PCA scores (from Question 3 Part A) as independent variables in your regression (just include the scores for the first 3 components.**
+```{r}
+# Your code for backward step-wise linear regression here
+dependent <- dplyr::select(soilveg, Nmass, Amass, SLA)
+independent <- dplyr::select(result, PC1, PC2, PC3)
+soilveg4lm <- cbind(dependent, independent)
+
+# backward step-wise linear regression
+initial_lm.Nmass <- lm(Nmass ~ PC1 + PC2 + PC3, data = soilveg4lm)
+step_lm.Nmass <- stepAIC(initial_lm.Nmass, direction='backward')
+summary(step_lm.Nmass)
+
+initial_lm.Amass <- lm(Amass ~ PC1 + PC2 + PC3, data = soilveg4lm)
+step_lm.Amass <- stepAIC(initial_lm.Amass, direction='backward')
+summary(step_lm.Amass)
+
+initial_lm.SLA <- lm(SLA ~ PC1 + PC2 + PC3, data = soilveg4lm)
+step_lm.SLA <- stepAIC(initial_lm.SLA, direction='backward')
+summary(step_lm.SLA)
+```
+
+### PART C
+**Based on your model results from Question 3 Part B, answer the question below:**
+
+**Which aspect of the vegetation response (`Nmass`, `Amass`, `SLA`) is found to be impacted more by sun duration related variables rather than by other weather variables?**
+
+ANSWER: According to the bi-plot, sun duration related variables are more correlated with PC2. Therefore, according to the linear model summaries, `SLA` is impacted more by sun duration related variables rather than by other weather variables.
+
+### PART D
+**Filter your original data set for Continent = North America. Then perform a cluster analysis on your subsetted data (only use these variables: `Nmass`, `Aarea`, `RAD` ,`PETf`, `SUNmean`, `pH`, `Pavail`, `PPTmean`, `SAND`, `TMPmean`, and also scale them). Your distance calculations should use the "Euclidean" distance and use the "complete" method of clustering with `hclust()`. Produce a dendrogram to visualize your results.**
+```{r}
+#Your code for cluster analysis here
+data4cluster <- soilveg %>%
+  filter(Continent == "North America") %>%
+  dplyr::select(Nmass, Aarea, RAD, PETf, SUNmean, pH, Pavail, PPTmean, SAND, TMPmean) %>%
+  scale
+
+distance <- dist(data4cluster, method='euclidean')
+
+clust <- hclust(distance)
+plot(clust, xlab='', sub='', ylab='', yaxt='n', main='')
+```
+
+### (Bonus) PART E
+**There are different packages for correspondence analysis in R. In Question 1 you may have already used the `ca` package, or the `FactorMineR` package to perform a correspondence analysis, but the results of these two packages are not always the SAME. In this part, you are asked to perform a correspondence analysis on the same variables "GF" and "ELEV_Cate" of the original data (soilveg_cleaned.csv) using the other package that you did not use in Question 1, list the summary of the correspondence analysis, and in particular, compare the results of `row$coord`(ca) and `row$coord`(FactorMineR),use any resource you can find to explain the differences of these two results------Why are they different in your opinion?**
+
+```{r}
+#Your code for Bonus part here
+library(FactoMineR)
+
+c_table <- table(soilveg$GF, soilveg$ELEV_Cate)
+# use the FactoMineR package
+res.ca.Facto <- FactoMineR::CA(c_table, graph = F)
+summary(res.ca.Facto)
+
+# use the ca package
+res.ca.ca <- ca::ca(c_table)
+summary(res.ca.ca)
+
+# compare the row coords
+res.ca.Facto$row$coord
+res.ca.ca$rowcoord
+```
+They are different due to differences in their default scaling methods and normalization approaches.
