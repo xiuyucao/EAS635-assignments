@@ -331,12 +331,6 @@ ANSWER: I will use 3 PCs which explained 81.6% of the variance.
 fviz_pca_biplot(pca.res, label='var', repel=T,  # set loading label paras
                 col.var='black') +  # color of the loading arrows
   labs(title = "", x = "Principal Component 1", y = "Principal Component 2") + 
-  theme(legend.position = "bottom",
-        legend.key.size = unit(1, "cm"), legend.key.width = unit(.5,"cm"),
-        legend.text=element_text(size=10), legend.title=element_blank(), 
-        text = element_text(size = 10),
-        axis.title = element_text(size = 10),axis.text = element_text(size = 10)) +
-  guides(fill = guide_legend(nrow = 2)) + 
   xlim(-10, 10) + ylim(-10, 10)
 ```
 
