@@ -1,0 +1,12 @@
+---
+title: ""
+author: ""
+date: ""
+output: pdf_document
+---
+
+# Appendix.1 Input Data
+```{r echo=T, message=F}
+data <- readRDS('../../data/proj/input_trees.rds')
+head(data, 50)
+```
